@@ -1,13 +1,16 @@
-import os, joblib
+import streamlit as st
+import os
+import joblib
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+st.title("🎓 CareerSense AI")
 
-# Paths
-model_path = os.path.join(BASE_DIR, "career_model.pkl")
-encoder_path = os.path.join(BASE_DIR, "label_encoder.pkl")
-columns_path = os.path.join(BASE_DIR, "model_columns.pkl")
+try:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(BASE_DIR, "career_model.pkl")
+    
+    model = joblib.load(model_path)
+    st.success("Model Loaded Successfully ✅")
 
-# Load
-model = joblib.load(model_path)
-label_encoder = joblib.load(encoder_path)
-model_columns = joblib.load(columns_path)
+except Exception as e:
+    st.error("Error loading model")
+    st.write(e)
