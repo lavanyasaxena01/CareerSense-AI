@@ -17,4 +17,4 @@ if st.button("Recommend Career"):
     
     st.success("Recommended Career: Data Scientist")
 
-streamlit run app/app.py
+
