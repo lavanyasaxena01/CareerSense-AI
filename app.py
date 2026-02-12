@@ -93,7 +93,7 @@ input_df.loc[0] = 0
 # Example assumes naming format like "Skills_Python"
 
 # Qualification
-qual_col = f"Highest Qualification_{qual.lower()}"
+qual_col = f"Highest Qualification_{education.lower()}"
 if qual_col in input_df.columns:
     input_df.at[0, qual_col] = 1
 
