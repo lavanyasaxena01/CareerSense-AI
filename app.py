@@ -172,53 +172,36 @@ def generate_roadmap(career):
 # Output Section
 # -------------------------------
 
-# Encode categorical values
-for col in input_df.columns:
-    input_df[col] = label_encoder.transform(input_df[col])
+if predict_btn:
 
-# Make sure columns match training
-input_df = input_df.reindex(columns=model_columns, fill_value=0)
+    # Create empty dataframe with training columns
+    input_df = pd.DataFrame(columns=model_columns)
+    input_df.loc[0] = 0
 
-prediction = model.predict(input_df)[0]
+    # Education
+    edu_col = f"Highest Qualification_{education.lower()}"
+    if edu_col in input_df.columns:
+        input_df.at[0, edu_col] = 1
 
-# Fetch salary & demand
-        career_info = data[data["career"] == prediction].iloc[0]
-        salary = career_info["salary_range"]
-        demand = career_info["demand"]
+    # Interest
+    interest_col = f"Primary Interests_{interest.lower()}"
+    if interest_col in input_df.columns:
+        input_df.at[0, interest_col] = 1
 
-        st.subheader("🎯 Recommended Career")
-        st.success(prediction)
+    # Skills
+    for skill in skills:
+        skill_col = f"Skills_{skill.lower()}"
+        if skill_col in input_df.columns:
+            input_df.at[0, skill_col] = 1
 
-        col1, col2 = st.columns(2)
+    # Predict
+    prediction_encoded = model.predict(input_df)[0]
+    prediction = label_encoder.inverse_transform([prediction_encoded])[0]
 
-        with col1:
-            st.markdown("### 💰 Salary Range")
-            st.info(salary)
+    st.subheader("🎯 Recommended Career")
+    st.success(prediction)
 
-        with col2:
-            st.markdown("### 📈 Market Demand")
-            st.info(demand)
-
-        # Skill Gap
-        required_skills = career_info["skills"].split(", ")
-        skill_gap = list(set(required_skills) - set(skills))
-
-        st.markdown("### 🧠 Skill Gap Analysis")
-        if skill_gap:
-            st.write("You should improve these skills:")
-            st.write(skill_gap)
-        else:
-            st.success("You already have strong skill alignment!")
-
-        # Roadmap
-        st.markdown("### 🗺️ Career Roadmap")
-        roadmap = generate_roadmap(prediction)
-        for step in roadmap:
-            st.write("✔", step)
-
-        # Visualization
-        st.markdown("### 📊 Salary Comparison")
-
-        salary_data = data.groupby("career").count()["salary_range"]
-        st.bar_chart(salary_data)
-
+    # OPTIONAL: Salary & Demand (only if you have dataset loaded)
+    # data = pd.read_csv("data/careers_dataset.csv")
+    # career_info = data[data["career"] == prediction].iloc[0]
+    # st.write("Salary:", career_info["salary_range"])
