@@ -5,7 +5,8 @@ import os
 st.set_page_config(page_title="CareerSense AI", layout="centered")
 
 st.title("🎯 CareerSense AI")
-with st.form("my_form"):
+# Change this line:
+with st.form("career_form"): 
     st.subheader("Student Profile")
     
     # Inputs based on your dataset columns
@@ -67,3 +68,13 @@ with st.form("my_form"):
     st.subheader("Enter your details")
     # ... (your input fields)
     submit = st.form_submit_button("Predict")
+
+# Example of using columns inside a form
+with st.form("student_analysis_form"):
+    col1, col2 = st.columns(2)
+    with col1:
+        interest = st.selectbox("Interests", ["Coding", "Design"])
+    with col2:
+        skills = st.multiselect("Skills", ["Python", "JS"])
+    
+    submit = st.form_submit_button("Run AI Analysis")
