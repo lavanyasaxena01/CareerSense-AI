@@ -1,57 +1,162 @@
 import streamlit as st
-import os
-import joblib
 import pandas as pd
+import joblib
+import random
 
-st.set_page_config(page_title="CareerSense AI", layout="wide")
-
-st.title("🎓 CareerSense AI")
-st.write("AI-Powered Career Guidance System")
-
-# Load model safely
-try:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(BASE_DIR, "career_model.pkl")
-    model = joblib.load(model_path)
-    st.success("Model Loaded Successfully ✅")
-except Exception as e:
-    st.error("Error loading model")
-    st.write(e)
-
-# --- USER INPUT SECTION ---
-st.subheader("Enter Your Details")
-
-interest = st.selectbox("Select Interest", ["Tech", "Business", "Creative"])
-education = st.selectbox("Education Level", ["BTech", "Any"])
-
-if st.button("Recommend Career"):
-    st.write("Processing...")
-
-    # Dummy result for now
-    st.success("🎯 Recommended Career: Data Scientist")
-    st.info("Salary Range: 8–15 LPA")
-    st.warning("Demand: High")
-
-    st.markdown("### 📌 Why This Career?")
-    st.write("Based on your interest in Tech and educational background, Data Science aligns well with your analytical profile.")
-
-    st.markdown("### 🚀 6-Month Roadmap")
-    st.write("""
-    - Month 1–2: Python + SQL  
-    - Month 3–4: Machine Learning  
-    - Month 5: Projects  
-    - Month 6: Internship preparation  
-    """)
-from openai import OpenAI
-
-client = OpenAI(api_key="YOUR_API_KEY")
-
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[
-        {"role":"user","content":
-         f"Explain why {career} is suitable and give a 6 month roadmap."}
-    ]
+# -------------------------------
+# Page Config
+# -------------------------------
+st.set_page_config(
+    page_title="CareerSense AI",
+    page_icon="🚀",
+    layout="wide"
 )
 
-st.write(response.choices[0].message.content)
+# -------------------------------
+# Custom Styling
+# -------------------------------
+st.markdown("""
+<style>
+.main-title {
+    font-size: 40px;
+    font-weight: bold;
+}
+.card {
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    background-color: #ffffff;
+    margin-bottom: 20px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# Title
+# -------------------------------
+st.markdown('<p class="main-title">🚀 CareerSense AI</p>', unsafe_allow_html=True)
+st.write("An Intelligent Career Guidance & Skill Recommendation System")
+
+st.divider()
+
+# -------------------------------
+# Load Model & Data
+# -------------------------------
+@st.cache_resource
+def load_model():
+    return joblib.load("models/career_model.pkl")
+
+@st.cache_data
+def load_data():
+    return pd.read_csv("data/careers_dataset.csv")
+
+model = load_model()
+data = load_data()
+
+# -------------------------------
+# Sidebar Input
+# -------------------------------
+st.sidebar.header("🎯 Enter Your Details")
+
+skills = st.sidebar.multiselect(
+    "Select Your Skills",
+    ["Python", "Java", "C++", "Machine Learning", "Communication",
+     "Design", "Marketing", "Data Analysis", "Leadership"]
+)
+
+interest = st.sidebar.selectbox(
+    "Select Your Interest",
+    ["Technology", "Business", "Creative", "Research"]
+)
+
+education = st.sidebar.selectbox(
+    "Education Level",
+    ["BTech", "BCA", "MBA", "Any"]
+)
+
+predict_btn = st.sidebar.button("🔮 Recommend Career")
+
+# -------------------------------
+# Prediction Logic
+# -------------------------------
+def generate_roadmap(career):
+    roadmap_dict = {
+        "Data Scientist": [
+            "Learn Python & Pandas",
+            "Master Machine Learning",
+            "Work on real datasets",
+            "Build portfolio projects"
+        ],
+        "Software Engineer": [
+            "Strengthen DSA",
+            "Build Web Applications",
+            "Learn Git & GitHub",
+            "Practice coding interviews"
+        ],
+        "Product Manager": [
+            "Improve communication",
+            "Learn product strategy",
+            "Understand UX basics",
+            "Work on case studies"
+        ]
+    }
+    return roadmap_dict.get(career, ["Build skills", "Gain experience", "Stay updated"])
+
+# -------------------------------
+# Output Section
+# -------------------------------
+if predict_btn:
+
+    if not skills:
+        st.warning("Please select at least one skill.")
+    else:
+        # Convert input to string
+        input_data = pd.DataFrame({
+            "skills": [", ".join(skills)],
+            "interest": [interest],
+            "education": [education]
+        })
+
+        prediction = model.predict(input_data)[0]
+
+        # Fetch salary & demand
+        career_info = data[data["career"] == prediction].iloc[0]
+        salary = career_info["salary_range"]
+        demand = career_info["demand"]
+
+        st.subheader("🎯 Recommended Career")
+        st.success(prediction)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("### 💰 Salary Range")
+            st.info(salary)
+
+        with col2:
+            st.markdown("### 📈 Market Demand")
+            st.info(demand)
+
+        # Skill Gap
+        required_skills = career_info["skills"].split(", ")
+        skill_gap = list(set(required_skills) - set(skills))
+
+        st.markdown("### 🧠 Skill Gap Analysis")
+        if skill_gap:
+            st.write("You should improve these skills:")
+            st.write(skill_gap)
+        else:
+            st.success("You already have strong skill alignment!")
+
+        # Roadmap
+        st.markdown("### 🗺️ Career Roadmap")
+        roadmap = generate_roadmap(prediction)
+        for step in roadmap:
+            st.write("✔", step)
+
+        # Visualization
+        st.markdown("### 📊 Salary Comparison")
+
+        salary_data = data.groupby("career").count()["salary_range"]
+        st.bar_chart(salary_data)
+
