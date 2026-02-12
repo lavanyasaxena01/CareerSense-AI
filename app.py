@@ -105,11 +105,10 @@ for word in interest.lower().split(","):
         input_df.at[0, col_name] = 1
 
 # Skills (split by comma)
-for word in skills.lower().split(","):
-    word = word.strip()
-    col_name = f"Skills_{word}"
-    if col_name in input_df.columns:
-        input_df.at[0, col_name] = 1
+for skill in skills:
+    skill_col = f"Skills_{skill.lower()}"
+    if skill_col in input_df.columns:
+        input_df.at[0, skill_col] = 1
 
 # Now predict
 if predict_btn:
