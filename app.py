@@ -1,3 +1,10 @@
+import joblib
+import pandas as pd
+
+model = joblib.load("models/career_model.pkl")
+label_encoder = joblib.load("models/label_encoder.pkl")
+model_columns = joblib.load("models/model_columns.pkl")
+
 import streamlit as st
 import pandas as pd
 import joblib
@@ -103,19 +110,23 @@ def generate_roadmap(career):
 # -------------------------------
 # Output Section
 # -------------------------------
-if predict_btn:
+# Convert input to dataframe
+input_dict = {
+    "interest": interest,
+    "education": education
+}
 
-    if not skills:
-        st.warning("Please select at least one skill.")
-    else:
-        # Convert input to string
-        input_data = pd.DataFrame({
-            "skills": [", ".join(skills)],
-            "interest": [interest],
-            "education": [education]
-        })
+input_df = pd.DataFrame([input_dict])
 
-        prediction = model.predict(input_data)[0]
+# Encode categorical values
+for col in input_df.columns:
+    input_df[col] = label_encoder.transform(input_df[col])
+
+# Make sure columns match training
+input_df = input_df.reindex(columns=model_columns, fill_value=0)
+
+prediction = model.predict(input_df)[0]
+
 
         # Fetch salary & demand
         career_info = data[data["career"] == prediction].iloc[0]
