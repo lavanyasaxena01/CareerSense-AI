@@ -112,8 +112,35 @@ for word in skills.lower().split(","):
         input_df.at[0, col_name] = 1
 
 # Now predict
-prediction_encoded = model.predict(input_df)[0]
-prediction = le.inverse_transform([prediction_encoded])[0]
+if predict_btn:
+
+    # Create empty dataframe with training columns
+    input_df = pd.DataFrame(columns=model_columns)
+    input_df.loc[0] = 0
+
+    # Convert education
+    edu_col = f"Highest Qualification_{education.lower()}"
+    if edu_col in input_df.columns:
+        input_df.at[0, edu_col] = 1
+
+    # Convert interest
+    interest_col = f"Primary Interests_{interest.lower()}"
+    if interest_col in input_df.columns:
+        input_df.at[0, interest_col] = 1
+
+    # Convert skills
+    for skill in skills:
+        skill_col = f"Skills_{skill.lower()}"
+        if skill_col in input_df.columns:
+            input_df.at[0, skill_col] = 1
+
+    # Predict
+    prediction_encoded = model.predict(input_df)[0]
+    prediction = label_encoder.inverse_transform([prediction_encoded])[0]
+
+    st.subheader("🎯 Recommended Career")
+    st.success(prediction)
+
 
 # -------------------------------
 # Prediction Logic
@@ -144,13 +171,6 @@ def generate_roadmap(career):
 # -------------------------------
 # Output Section
 # -------------------------------
-# Convert input to dataframe
-input_dict = {
-    "interest": interest,
-    "education": education
-}
-
-input_df = pd.DataFrame([input_dict])
 
 # Encode categorical values
 for col in input_df.columns:
