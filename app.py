@@ -42,3 +42,16 @@ if st.button("Recommend Career"):
     - Month 5: Projects  
     - Month 6: Internship preparation  
     """)
+from openai import OpenAI
+
+client = OpenAI(api_key="YOUR_API_KEY")
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role":"user","content":
+         f"Explain why {career} is suitable and give a 6 month roadmap."}
+    ]
+)
+
+st.write(response.choices[0].message.content)
