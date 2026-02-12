@@ -127,8 +127,7 @@ input_df = input_df.reindex(columns=model_columns, fill_value=0)
 
 prediction = model.predict(input_df)[0]
 
-
-        # Fetch salary & demand
+# Fetch salary & demand
         career_info = data[data["career"] == prediction].iloc[0]
         salary = career_info["salary_range"]
         demand = career_info["demand"]
