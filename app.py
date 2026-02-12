@@ -1,28 +1,51 @@
 import streamlit as st
+import pandas as pd
 import joblib
 import os
 
-st.set_page_config(page_title="CareerSense AI", layout="centered")
+# 1. Page Configuration
+st.set_page_config(page_title="CareerSense AI", layout="centered", page_icon="🎯")
 
+# 2. Model Loading Logic (Must happen before the form uses the variables)
+@st.cache_resource
+def load_data():
+    # Ensure these filenames match exactly what you uploaded to GitHub
+    model = joblib.load('career_model.pkl')
+    le = joblib.load('label_encoder.pkl')
+    cols = joblib.load('model_columns.pkl')
+    return model, le, cols
+
+try:
+    model, le, model_cols = load_data()
+except Exception as e:
+    st.error(f"Error loading model files: {e}")
+    st.stop()
+
+# 3. Main UI
 st.title("🎯 CareerSense AI")
-# Change this line:
-with st.form("career_form"): 
+st.write("Intelligent career guidance powered by Machine Learning.")
+
+# 4. The Unified Input Form (ONE form only)
+with st.form("career_analysis_form"):
     st.subheader("Student Profile")
     
-    # Inputs based on your dataset columns
-    interest = st.selectbox("Select your main Interest", ["Coding", "Design", "Writing", "Business", "Healthcare"])
-    skills = st.multiselect("Select your Skills", ["Python", "Java", "SQL", "Photoshop", "Management", "Communication"])
-    degree = st.selectbox("Current Qualification", ["High School", "Bachelors", "Masters"])
+    col1, col2 = st.columns(2)
+    with col1:
+        # Use the interests your model was actually trained on
+        interest = st.selectbox("Primary Interest", ["Coding", "Design", "Writing", "Business", "Healthcare"])
+        degree = st.selectbox("Qualification", ["High School", "Bachelors", "Masters"])
+    
+    with col2:
+        skills = st.multiselect("Your Skills", ["Python", "Java", "SQL", "Photoshop", "Management", "Communication"])
+    
+    submit = st.form_submit_button("Predict My Career Path")
 
-    submit = st.form_submit_button("Predict My Career")
-
+# 5. Prediction Logic
 if submit:
-    # 1. Prepare Input Data (Matching your model_columns)
-    # This creates a row of 0s
+    # Prepare Input Data (Matching your model_columns)
     input_data = pd.DataFrame(0, index=[0], columns=model_cols)
     
-    # 2. Update the columns for the selected inputs to 1
-    # Note: Column names must match exactly what pd.get_dummies produced in Colab
+    # Fill in user selections (Mapping text to binary columns)
     if f"Interests_{interest}" in model_cols:
         input_data.at[0, f"Interests_{interest}"] = 1
         
@@ -30,51 +53,24 @@ if submit:
         if f"Skills_{s}" in model_cols:
             input_data.at[0, f"Skills_{s}"] = 1
 
-    # 3. Predict using XGBoost/RandomForest
+    # Predict
     prediction = model.predict(input_data)
     career_name = le.inverse_transform(prediction)[0]
 
+    # Display Results
     st.success(f"### Recommended Career: {career_name}")
+    st.info("💡 **AI Match Score:** Based on your profile, you are a strong match for this field.")
 
-    # 5. Generative AI Roadmap
-    st.markdown("---")
+    # 6. Roadmap Section
+    st.divider()
     st.subheader("🗺️ Your Skill Development Roadmap")
+    st.write(f"To succeed as a **{career_name}**, follow this path:")
     
-    # If you have an OpenAI/Gemini Key set up in Streamlit Secrets:
-    # roadmap = get_ai_response(career_name, skills) 
-    # st.write(roadmap)
-
-    # For the Exhibition (Static Demo version):
-    st.write(f"To become a successful **{career_name}**, we recommend:")
-    st.markdown(f"- **Month 1-2:** Deep dive into advanced {skills[0] if skills else 'technical basics'}.")
-    st.markdown("- **Month 3-4:** Build 3 portfolio projects related to this field.")
-    st.markdown("- **Month 5-6:** Prepare for industry-standard certifications.")
+    # Logic to handle empty skill selection for the roadmap display
+    focus_skill = skills[0] if skills else "fundamental technical skills"
     
-    # 4. Show Career Breakdown (Visual wow factor)
-    st.info("💡 **AI Tip:** Based on your skills, you have an 85% match for this role.")
-
-# --- LOAD MODELS ---
-@st.cache_resource
-def load_data():
-    model = joblib.load('career_model.pkl')
-    le = joblib.load('label_encoder.pkl')
-    cols = joblib.load('model_columns.pkl')
-    return model, le, cols
-
-model, le, model_cols = load_data()
-
-# --- YOUR FORM STARTS HERE ---
-with st.form("my_form"):
-    st.subheader("Enter your details")
-    # ... (your input fields)
-    submit = st.form_submit_button("Predict")
-
-# Example of using columns inside a form
-with st.form("student_analysis_form"):
-    col1, col2 = st.columns(2)
-    with col1:
-        interest = st.selectbox("Interests", ["Coding", "Design"])
-    with col2:
-        skills = st.multiselect("Skills", ["Python", "JS"])
-    
-    submit = st.form_submit_button("Run AI Analysis")
+    st.markdown(f"""
+    - **Months 1-2:** Deep dive into advanced {focus_skill} and industry standards.
+    - **Months 3-4:** Build 3 portfolio projects specifically for {career_name} roles.
+    - **Months 5-6:** Prepare for professional certifications and begin networking.
+    """)
