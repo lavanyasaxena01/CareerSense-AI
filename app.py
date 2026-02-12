@@ -1,5 +1,12 @@
-import streamlit as st
+import os
 import joblib
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+model_path = os.path.join(BASE_DIR, "models", "career_model.pkl")
+
+model = joblib.load(model_path)
+
+import streamlit as st
 import pandas as pd
 
 st.set_page_config(page_title="CareerSense AI", layout="wide")
