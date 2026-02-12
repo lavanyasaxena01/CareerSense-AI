@@ -81,6 +81,40 @@ education = st.sidebar.selectbox(
 
 predict_btn = st.sidebar.button("🔮 Recommend Career")
 
+import pandas as pd
+
+# Create empty dataframe with all model columns
+input_df = pd.DataFrame(columns=model_cols)
+
+# Initialize all values to 0
+input_df.loc[0] = 0
+
+# Convert user inputs into dummy format
+# Example assumes naming format like "Skills_Python"
+
+# Qualification
+qual_col = f"Highest Qualification_{qual.lower()}"
+if qual_col in input_df.columns:
+    input_df.at[0, qual_col] = 1
+
+# Interests (split by comma)
+for word in interest.lower().split(","):
+    word = word.strip()
+    col_name = f"Primary Interests_{word}"
+    if col_name in input_df.columns:
+        input_df.at[0, col_name] = 1
+
+# Skills (split by comma)
+for word in skills.lower().split(","):
+    word = word.strip()
+    col_name = f"Skills_{word}"
+    if col_name in input_df.columns:
+        input_df.at[0, col_name] = 1
+
+# Now predict
+prediction_encoded = model.predict(input_df)[0]
+prediction = le.inverse_transform([prediction_encoded])[0]
+
 # -------------------------------
 # Prediction Logic
 # -------------------------------
