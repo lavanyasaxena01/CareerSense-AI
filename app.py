@@ -1,3 +1,89 @@
+import streamlit as st
+
+st.set_page_config(
+    page_title="CareerSense AI",
+    page_icon="🚀",
+    layout="wide"
+)
+
+# Custom CSS
+st.markdown("""
+<style>
+.main {
+    background-color: #f5f7fa;
+}
+.title {
+    font-size:40px;
+    font-weight:bold;
+    color:#1f4e79;
+}
+.card {
+    background-color:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns([1,2])
+def calculate_match(user_skills, required_skills):
+    user_skills = [skill.strip().lower() for skill in user_skills]
+    required_skills = [skill.strip().lower() for skill in required_skills.split(",")]
+
+    match = len(set(user_skills) & set(required_skills))
+    return match / len(required_skills)
+career_scores = []
+
+for index, row in df.iterrows():
+    score = calculate_match(user_skills, row['required_skills'])
+    career_scores.append((row['career'], score))
+
+career_scores.sort(key=lambda x: x[1], reverse=True)
+top_career = career_scores[0][0]
+
+st.markdown(f"""
+<div class="card">
+<h2>🎯 Recommended Career</h2>
+<h3 style='color:#1f77b4;'>{top_career}</h3>
+</div>
+""", unsafe_allow_html=True)
+
+st.subheader("Skill Match Score")
+
+for skill in required_skills:
+    if skill in user_skills:
+        st.progress(100)
+    else:
+        st.progress(30)
+
+import matplotlib.pyplot as plt
+
+careers = [c[0] for c in career_scores[:5]]
+scores = [c[1] for c in career_scores[:5]]
+
+fig, ax = plt.subplots()
+ax.barh(careers, scores)
+st.pyplot(fig)
+
+from openai import OpenAI
+client = OpenAI(api_key="your_key")
+
+prompt = f"""
+User skills: {user_skills}
+Recommended career: {top_career}
+Generate a personalized 6 month roadmap.
+"""
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": prompt}]
+)
+
+st.write(response.choices[0].message.content)
+
+
+
 import joblib
 import pandas as pd
 
