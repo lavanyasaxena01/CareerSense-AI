@@ -44,14 +44,26 @@ st.divider()
 # -------------------------------
 @st.cache_resource
 def load_model():
-    return joblib.load("models/career_model.pkl")
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.preprocessing import LabelEncoder
 
-@st.cache_data
-def load_data():
-    return pd.read_csv("data/careers_dataset.csv")
+    df = pd.read_csv("data/careers_dataset.csv")
 
-model = load_model()
-data = load_data()
+    le_interest = LabelEncoder()
+    le_education = LabelEncoder()
+    le_career = LabelEncoder()
+
+    df["interest"] = le_interest.fit_transform(df["interest"])
+    df["education"] = le_education.fit_transform(df["education"])
+    df["career"] = le_career.fit_transform(df["career"])
+
+    X = df[["interest", "education"]]
+    y = df["career"]
+
+    model = RandomForestClassifier()
+    model.fit(X, y)
+
+    return model, le_interest, le_education, le_career
 
 # -------------------------------
 # Sidebar Input
