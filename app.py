@@ -84,7 +84,7 @@ predict_btn = st.sidebar.button("🔮 Recommend Career")
 import pandas as pd
 
 # Create empty dataframe with all model columns
-input_df = pd.DataFrame(columns=model_cols)
+input_df = pd.DataFrame(columns=model_columns)
 
 # Initialize all values to 0
 input_df.loc[0] = 0
