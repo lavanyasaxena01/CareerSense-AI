@@ -1,211 +1,127 @@
-# =====================================
-# CareerSense AI - Clean Version
-# =====================================
-
 import streamlit as st
-import pandas as pd
+import os
 import joblib
-import matplotlib.pyplot as plt
+import pandas as pd
 
-# -------------------------------
-# Page Config
-# -------------------------------
-st.set_page_config(
-    page_title="CareerSense AI",
-    page_icon="🚀",
-    layout="wide"
-)
+st.set_page_config(page_title="CareerSense AI", layout="wide")
 
-# -------------------------------
-# Custom Styling
-# -------------------------------
+# -------------------- CUSTOM CSS --------------------
 st.markdown("""
 <style>
-.main-title {
-    font-size: 42px;
-    font-weight: bold;
-    color: #1f4e79;
+/* Background Gradient */
+.stApp {
+    background: linear-gradient(135deg, #1f3c88, #39a0ca);
+    color: white;
 }
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+    color: white;
+}
+
+/* Cards */
 .card {
-    padding: 25px;
+    background-color: white;
+    padding: 20px;
     border-radius: 15px;
-    background-color: #ffffff;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+    color: black;
 }
-.sidebar .sidebar-content {
-    background-color: #f0f2f6;
+
+/* Buttons */
+.stButton>button {
+    background-color: #4F46E5;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
+    border: none;
+}
+
+.stButton>button:hover {
+    background-color: #4338CA;
+}
+
+/* Titles */
+.main-title {
+    font-size: 40px;
+    font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------
-# Title Section
-# -------------------------------
-st.markdown('<p class="main-title">🚀 CareerSense AI</p>', unsafe_allow_html=True)
-st.write("An Intelligent Career Guidance & Skill Recommendation System")
+# -------------------- SIDEBAR --------------------
+st.sidebar.title("🚀 CareerSense AI")
+st.sidebar.markdown("### Navigation")
+st.sidebar.write("🏠 Dashboard")
+st.sidebar.write("🔍 Explore Careers")
+st.sidebar.write("📊 Skill Analysis")
+st.sidebar.write("💬 AI Assistant")
 
-st.divider()
+# -------------------- HEADER --------------------
+st.markdown('<div class="main-title">🎓 Career Dashboard</div>', unsafe_allow_html=True)
+st.markdown("AI-Powered Career Intelligence System")
 
-# -------------------------------
-# Load Model & Encoders
-# -------------------------------
-@st.cache_resource
-def load_resources():
-    model = joblib.load("models/career_model.pkl")
-    label_encoder = joblib.load("models/label_encoder.pkl")
-    model_columns = joblib.load("models/model_columns.pkl")
-    return model, label_encoder, model_columns
+st.markdown("---")
 
-model, label_encoder, model_columns = load_resources()
+# -------------------- METRIC CARDS --------------------
+col1, col2, col3 = st.columns(3)
 
-# -------------------------------
-# Sidebar Inputs
-# -------------------------------
-st.sidebar.header("🎯 Enter Your Details")
+with col1:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.metric("Recommended Career", "Data Scientist", "+ High Demand")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-skills = st.sidebar.multiselect(
-    "Select Your Skills",
-    ["Python", "Java", "C++", "Machine Learning", "Communication",
-     "Design", "Marketing", "Data Analysis", "Leadership"]
-)
+with col2:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.metric("Salary Range", "8–15 LPA", "↑ 12% growth")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-interest = st.sidebar.selectbox(
-    "Select Your Interest",
-    ["Technology", "Business", "Creative", "Research"]
-)
+with col3:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.metric("Job Demand", "High", "🔥 Trending")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-education = st.sidebar.selectbox(
-    "Education Level",
-    ["BTech", "BCA", "MBA", "Any"]
-)
+st.markdown(" ")
 
-predict_btn = st.sidebar.button("🔮 Recommend Career")
+# -------------------- SKILL GAP SECTION --------------------
+st.subheader("📊 Skill Gap Analysis")
 
-# -------------------------------
-# Prediction Logic
-# -------------------------------
+col4, col5 = st.columns([2,1])
 
-def prepare_input():
-    input_df = pd.DataFrame(columns=model_columns)
-    input_df.loc[0] = 0
+with col4:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.write("### Your Skill Strength")
 
-    # Education
-    edu_col = f"Highest Qualification_{education.lower()}"
-    if edu_col in input_df.columns:
-        input_df.at[0, edu_col] = 1
+    st.progress(80, text="Python")
+    st.progress(60, text="Machine Learning")
+    st.progress(40, text="SQL")
+    st.progress(30, text="Deep Learning")
 
-    # Interest
-    interest_col = f"Primary Interests_{interest.lower()}"
-    if interest_col in input_df.columns:
-        input_df.at[0, interest_col] = 1
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Skills
-    for skill in skills:
-        skill_col = f"Skills_{skill.lower()}"
-        if skill_col in input_df.columns:
-            input_df.at[0, skill_col] = 1
+with col5:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.write("### Improvement Needed")
 
-    return input_df
+    st.info("• Deep Learning")
+    st.info("• System Design")
+    st.info("• Advanced SQL")
 
+    st.markdown('</div>', unsafe_allow_html=True)
 
-def generate_roadmap(career):
-    roadmap_dict = {
-        "Data Scientist": [
-            "Learn Python & Pandas",
-            "Master Machine Learning",
-            "Work on real datasets",
-            "Build portfolio projects"
-        ],
-        "Software Engineer": [
-            "Strengthen DSA",
-            "Build Web Applications",
-            "Learn Git & GitHub",
-            "Practice coding interviews"
-        ],
-        "Product Manager": [
-            "Improve communication",
-            "Learn product strategy",
-            "Understand UX basics",
-            "Work on case studies"
-        ]
-    }
-    return roadmap_dict.get(career, [
-        "Build relevant technical skills",
-        "Work on real-world projects",
-        "Create portfolio",
-        "Apply for internships"
-    ])
+st.markdown(" ")
 
-# -------------------------------
-# Output Section
-# -------------------------------
+# -------------------- AI ROADMAP SECTION --------------------
+st.subheader("🧠 6-Month AI Roadmap")
 
-if predict_btn:
+st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    if not skills:
-        st.warning("⚠ Please select at least one skill.")
-    else:
+st.write("""
+**Month 1–2:** Python + SQL  
+**Month 3–4:** Machine Learning Projects  
+**Month 5:** Internship Preparation  
+**Month 6:** Build Portfolio + Apply  
+""")
 
-        input_df = prepare_input()
-
-        prediction_encoded = model.predict(input_df)[0]
-        prediction = label_encoder.inverse_transform([prediction_encoded])[0]
-
-        col1, col2 = st.columns([2,1])
-
-        # -------------------------------
-        # Career Card
-        # -------------------------------
-        with col1:
-            st.markdown(f"""
-            <div class="card">
-            <h2>🎯 Recommended Career</h2>
-            <h3 style='color:#1f77b4;'>{prediction}</h3>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Roadmap
-            st.markdown("### 🛣 6-Month Roadmap")
-            roadmap = generate_roadmap(prediction)
-            for step in roadmap:
-                st.write("✔", step)
-
-        # -------------------------------
-        # Analytics Section
-        # -------------------------------
-        with col2:
-            st.markdown("### 📊 Skill Strength")
-
-            for skill in skills:
-                st.progress(80)
-
-            st.markdown("### 💰 Estimated Salary (India)")
-            st.metric("Average Range", "₹8–15 LPA")
-
-        # -------------------------------
-        # Career Comparison Chart
-        # -------------------------------
-        st.markdown("### 📈 Career Match Overview")
-
-        sample_scores = {
-            "Data Scientist": 0.85,
-            "Software Engineer": 0.75,
-            "Product Manager": 0.60,
-            "Cyber Security": 0.50
-        }
-
-        fig, ax = plt.subplots()
-        ax.barh(list(sample_scores.keys()), list(sample_scores.values()))
-        st.pyplot(fig)
-
-        # -------------------------------
-        # Future Scope Section
-        # -------------------------------
-        st.markdown("### 🚀 Future Enhancements")
-        st.info("""
-        - Resume parsing integration  
-        - LinkedIn profile analysis  
-        - Real-time job market API  
-        - AI personality assessment  
-        """)
+st.markdown('</div>', unsafe_allow_html=True)
